@@ -7,7 +7,7 @@ conn = psycopg2.connect(
     user="admin",
     password="xRZQdDx9_04APJdJc1CftnyqX9VZyX",
     sslmode="verify-full",
-    sslrootcert="./root.crt"
+    sslrootcert="Usfeul info\\root.crt"
 )
 conn.autocommit=True
 cursor = conn.cursor()
