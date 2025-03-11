@@ -24,10 +24,9 @@ def store_articles(articles):
     # Create Table (If Not Exists)
     create_table_query = """
     CREATE TABLE IF NOT EXISTS news (
-        id SERIAL PRIMARY KEY,
+        news_id SERIAL PRIMARY KEY,
         title TEXT,
         raw_content TEXT,
-        processed_content TEXT,
         url TEXT UNIQUE,        
         published_date TIMESTAMP
     );
@@ -42,10 +41,10 @@ def store_articles(articles):
     # Batch Insert Data (Ignoring Duplicates)
     if articles:
         insert_query = """
-        INSERT INTO news (title, raw_content, processed_content, url, published_date) 
-        VALUES (%s, %s, %s, %s, %s) ON CONFLICT (url) DO NOTHING;
+        INSERT INTO news (title, raw_content, url, published_date) 
+        VALUES (%s, %s, %s, %s) ON CONFLICT (url) DO NOTHING;
         """
-        execute_batch(cursor, insert_query, [(a["title"], a["raw_content"], a["processed_content"], a["url"], a["published_date"]) for a in articles])
+        execute_batch(cursor, insert_query, [(a["title"], a["raw_content"], a["url"], a["published_date"]) for a in articles])
 
         conn.commit()
         cursor.close()

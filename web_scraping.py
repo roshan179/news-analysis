@@ -121,8 +121,8 @@ def fetch_news(date=None, num_articles=50):
                 "title": article.get("webTitle", "No Title"),
                 "raw_content": article.get("fields", {}).get("body", "No Content"),
                 "url": article.get("webUrl", "No URL"),
-                "published_date": article.get("webPublicationDate", "Unknown"),
-                "processed_content": processing_ready_text(clean_text(article.get("fields", {}).get("body", "No Content")))
+                "published_date": article.get("webPublicationDate", "Unknown")
+                # "processed_content": processing_ready_text(clean_text(article.get("fields", {}).get("body", "No Content")))
             })
 
         print(f"✅ {len(articles)} articles fetched for {date}, page {page}.")
