@@ -104,24 +104,23 @@ def summarize_text(text, news_id, title, word_limit=60):
     print("✅ Debug: Final summary generated successfully!\n")
     return " ".join(summary)
 
-# ✅ Fetch Data & Apply Summarization
-df = fetch_news_data()
+def summarize_news():
+    """Main function to fetch news, summarize, and store in DB."""
+    df = fetch_news_data()
+    df["summary"] = df.apply(lambda row: summarize_text(clean_text(row["raw_content"]), row["news_id"], row["title"], word_limit=60), axis=1)
 
-# ✅ Apply summarization with correct news_id & title
-df["summary"] = df.apply(lambda row: summarize_text(clean_text(row["raw_content"]), row["news_id"], row["title"], word_limit=60), axis=1)
+    conn = psycopg2.connect(DB_URL)
+    cursor = conn.cursor()
 
-# ✅ Store Summaries in Database
-conn = psycopg2.connect(DB_URL)
-cursor = conn.cursor()
+    for i, row in df.iterrows():
+        query = """
+        INSERT INTO news_summaries (news_id, summary) VALUES (%s, %s)
+        ON CONFLICT (news_id) DO UPDATE SET summary = EXCLUDED.summary;
+        """
+        cursor.execute(query, (row["news_id"], row["summary"]))
 
-for i, row in df.iterrows():
-    query = """
-    INSERT INTO news_summaries (news_id, summary) VALUES (%s, %s)
-    ON CONFLICT (news_id) DO UPDATE SET summary = EXCLUDED.summary;
-    """
-    cursor.execute(query, (row["news_id"], row["summary"]))
+    conn.commit()
+    conn.close()
+    print("✅ News summaries stored in the database with a strict 60-word limit!")
 
-conn.commit()
-conn.close()
-print("✅ News summaries stored in the database with a strict 60-word limit!")
 
