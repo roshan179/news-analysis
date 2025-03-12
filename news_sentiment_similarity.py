@@ -77,92 +77,46 @@ def compute_news_similarity(df):
 
     return news_similarity_results
 
-# # ✅ Fetch Data
-# df = fetch_news_data()
+# ✅ Fetch Data
+df = fetch_news_data()
 
-# # ✅ Process Raw Content for Sentiment & Similarity
-# df["cleaned_sentiment_text"] = df["raw_content"].apply(preprocess_for_sentiment)
-# df["cleaned_similarity_text"] = df["raw_content"].apply(preprocess_for_similarity)
+# ✅ Process Raw Content for Sentiment & Similarity
+df["cleaned_sentiment_text"] = df["raw_content"].apply(preprocess_for_sentiment)
+df["cleaned_similarity_text"] = df["raw_content"].apply(preprocess_for_similarity)
 
-# # ✅ Apply Sentiment Analysis
-# df[["sentiment", "sentiment_score"]] = df["cleaned_sentiment_text"].apply(lambda x: pd.Series(analyze_sentiment(x)))
+# ✅ Apply Sentiment Analysis
+df[["sentiment", "sentiment_score"]] = df["cleaned_sentiment_text"].apply(lambda x: pd.Series(analyze_sentiment(x)))
 
-# # ✅ Compute News Similarity
-# news_similarity_results = compute_news_similarity(df)
+# ✅ Compute News Similarity
+news_similarity_results = compute_news_similarity(df)
 
-# # ✅ Store Sentiments in Database
-# conn = psycopg2.connect(DB_URL)
-# cursor = conn.cursor()
+# ✅ Store Sentiments in Database
+conn = psycopg2.connect(DB_URL)
+cursor = conn.cursor()
 
-# for i, row in df.iterrows():
-#     query = """
-#     INSERT INTO news_sentiments (news_id, sentiment, sentiment_score) VALUES (%s, %s, %s)
-#     ON CONFLICT (news_id) DO UPDATE SET sentiment = EXCLUDED.sentiment, sentiment_score = EXCLUDED.sentiment_score;
-#     """
-#     try:
-#         cursor.execute(query, (row["news_id"], row["sentiment"], row["sentiment_score"]))
-#         print(f"Successfully inserted sentiment data for news_id:{row["news_id"]}!")
-#     except Exception as e:
-#         print(f"Faced an error while inserting sentiment data for news_id - {row["news_id"]} : {e}")
-
-# # ✅ Store Similarity Data in Database
-# for news_id, similar_id, score in news_similarity_results:
-#     query = """
-#     INSERT INTO news_similarity (news_id, similar_news_id, similarity_score) VALUES (%s, %s, %s)
-#     ON CONFLICT (news_id, similar_news_id) DO UPDATE SET similarity_score = EXCLUDED.similarity_score;
-#     """
-#     try:
-#         cursor.execute(query, (int(news_id), int(similar_id), float(score)))  # ✅ Convert to Python int & float
-#         print(f"Successfully inserted similarity data for news_id:{news_id}!")
-#     except Exception as e:
-#         print(f"Faced an error while inserting similarity data for news_id - {news_id} : {e}")
-
-# conn.commit()
-# conn.close()
-# print("✅ Sentiment analysis and news similarity stored in the database!")
-
-def perform_sentiment_analysis():
-    """Processes news sentiment and stores it in the database."""
-    df = fetch_news_data()
-    df["cleaned_sentiment_text"] = df["raw_content"].apply(preprocess_for_sentiment)  # ✅ Use sentiment-specific preprocessing
-    df["sentiment"], df["sentiment_score"] = zip(*df["cleaned_sentiment_text"].apply(analyze_sentiment))
-
-    conn = psycopg2.connect(DB_URL)
-    cursor = conn.cursor()
-
-    for i, row in df.iterrows():
-        query = """
-        INSERT INTO news_sentiments (news_id, sentiment, sentiment_score) VALUES (%s, %s, %s)
-        ON CONFLICT (news_id) DO UPDATE SET sentiment = EXCLUDED.sentiment, sentiment_score = EXCLUDED.sentiment_score;
-        """
+for i, row in df.iterrows():
+    query = """
+    INSERT INTO news_sentiments (news_id, sentiment, sentiment_score) VALUES (%s, %s, %s)
+    ON CONFLICT (news_id) DO UPDATE SET sentiment = EXCLUDED.sentiment, sentiment_score = EXCLUDED.sentiment_score;
+    """
+    try:
         cursor.execute(query, (row["news_id"], row["sentiment"], row["sentiment_score"]))
+        print(f"Successfully inserted sentiment data for news_id:{row["news_id"]}!")
+    except Exception as e:
+        print(f"Faced an error while inserting sentiment data for news_id - {row["news_id"]} : {e}")
 
-    conn.commit()
-    conn.close()
-    print("✅ Sentiment Analysis Completed!")
+# ✅ Store Similarity Data in Database
+for news_id, similar_id, score in news_similarity_results:
+    query = """
+    INSERT INTO news_similarity (news_id, similar_news_id, similarity_score) VALUES (%s, %s, %s)
+    ON CONFLICT (news_id, similar_news_id) DO UPDATE SET similarity_score = EXCLUDED.similarity_score;
+    """
+    try:
+        cursor.execute(query, (int(news_id), int(similar_id), float(score)))  # ✅ Convert to Python int & float
+        print(f"Successfully inserted similarity data for news_id:{news_id}!")
+    except Exception as e:
+        print(f"Faced an error while inserting similarity data for news_id - {news_id} : {e}")
 
-def perform_news_similarity():
-    """Computes and stores news similarity."""
-    df = fetch_news_data()
-    df["cleaned_similarity_text"] = df["raw_content"].apply(preprocess_for_similarity)  # ✅ Use similarity-specific preprocessing
-
-    vectorizer = TfidfVectorizer(stop_words="english")
-    tfidf_matrix = vectorizer.fit_transform(df["cleaned_similarity_text"])
-    similarity_matrix = cosine_similarity(tfidf_matrix)
-
-    conn = psycopg2.connect(DB_URL)
-    cursor = conn.cursor()
-
-    for idx, row in df.iterrows():
-        similar_indices = similarity_matrix[idx].argsort()[-4:-1][::-1]
-        for i in similar_indices:
-            query = """
-            INSERT INTO news_similarity (news_id, similar_news_id, similarity_score) VALUES (%s, %s, %s)
-            ON CONFLICT (news_id, similar_news_id) DO UPDATE SET similarity_score = EXCLUDED.similarity_score;
-            """
-            cursor.execute(query, (row["news_id"], df.iloc[i]["news_id"], similarity_matrix[idx, i]))
-
-    conn.commit()
-    conn.close()
-    print("✅ News Similarity Computation Completed!")
-
+conn.commit()
+conn.close()
+print("✅ Sentiment analysis and news similarity stored in the database!")
