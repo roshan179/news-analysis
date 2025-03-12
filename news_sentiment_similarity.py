@@ -77,46 +77,110 @@ def compute_news_similarity(df):
 
     return news_similarity_results
 
-# ✅ Fetch Data
-df = fetch_news_data()
+def perform_sentiment_analysis():
+    """Processes news sentiment and stores it in the database."""
+    print("\n🚀 Performing Sentiment Analysis...")
+    
+    # ✅ Fetch Data
+    df = fetch_news_data()
+    
+    # ✅ Process Raw Content for Sentiment
+    df["cleaned_sentiment_text"] = df["raw_content"].apply(preprocess_for_sentiment)
+    
+    # ✅ Apply Sentiment Analysis
+    df[["sentiment", "sentiment_score"]] = df["cleaned_sentiment_text"].apply(lambda x: pd.Series(analyze_sentiment(x)))
 
-# ✅ Process Raw Content for Sentiment & Similarity
-df["cleaned_sentiment_text"] = df["raw_content"].apply(preprocess_for_sentiment)
-df["cleaned_similarity_text"] = df["raw_content"].apply(preprocess_for_similarity)
+    # ✅ Store Sentiments in Database
+    conn = psycopg2.connect(DB_URL)
+    cursor = conn.cursor()
 
-# ✅ Apply Sentiment Analysis
-df[["sentiment", "sentiment_score"]] = df["cleaned_sentiment_text"].apply(lambda x: pd.Series(analyze_sentiment(x)))
+    for i, row in df.iterrows():
+        query = """
+        INSERT INTO news_sentiments (news_id, sentiment, sentiment_score) VALUES (%s, %s, %s)
+        ON CONFLICT (news_id) DO UPDATE SET sentiment = EXCLUDED.sentiment, sentiment_score = EXCLUDED.sentiment_score;
+        """
+        try:
+            cursor.execute(query, (row["news_id"], row["sentiment"], row["sentiment_score"]))
+            print(f"✅ Successfully inserted sentiment data for news_id: {row['news_id']}!")
+        except Exception as e:
+            print(f"❌ Error inserting sentiment data for news_id {row['news_id']}: {e}")
 
-# ✅ Compute News Similarity
-news_similarity_results = compute_news_similarity(df)
+    conn.commit()
+    conn.close()
+    print("✅ Sentiment Analysis Completed!")
 
-# ✅ Store Sentiments in Database
-conn = psycopg2.connect(DB_URL)
-cursor = conn.cursor()
+def perform_news_similarity():
+    """Computes and stores news similarity."""
+    print("\n🚀 Computing News Similarity...")
 
-for i, row in df.iterrows():
-    query = """
-    INSERT INTO news_sentiments (news_id, sentiment, sentiment_score) VALUES (%s, %s, %s)
-    ON CONFLICT (news_id) DO UPDATE SET sentiment = EXCLUDED.sentiment, sentiment_score = EXCLUDED.sentiment_score;
-    """
-    try:
-        cursor.execute(query, (row["news_id"], row["sentiment"], row["sentiment_score"]))
-        print(f"Successfully inserted sentiment data for news_id:{row["news_id"]}!")
-    except Exception as e:
-        print(f"Faced an error while inserting sentiment data for news_id - {row["news_id"]} : {e}")
+    # ✅ Fetch Data
+    df = fetch_news_data()
 
-# ✅ Store Similarity Data in Database
-for news_id, similar_id, score in news_similarity_results:
-    query = """
-    INSERT INTO news_similarity (news_id, similar_news_id, similarity_score) VALUES (%s, %s, %s)
-    ON CONFLICT (news_id, similar_news_id) DO UPDATE SET similarity_score = EXCLUDED.similarity_score;
-    """
-    try:
-        cursor.execute(query, (int(news_id), int(similar_id), float(score)))  # ✅ Convert to Python int & float
-        print(f"Successfully inserted similarity data for news_id:{news_id}!")
-    except Exception as e:
-        print(f"Faced an error while inserting similarity data for news_id - {news_id} : {e}")
+    # ✅ Process Raw Content for Similarity
+    df["cleaned_similarity_text"] = df["raw_content"].apply(preprocess_for_similarity)
 
-conn.commit()
-conn.close()
-print("✅ Sentiment analysis and news similarity stored in the database!")
+    # ✅ Compute News Similarity
+    news_similarity_results = compute_news_similarity(df)
+
+    # ✅ Store Similarity Data in Database
+    conn = psycopg2.connect(DB_URL)
+    cursor = conn.cursor()
+
+    for news_id, similar_id, score in news_similarity_results:
+        query = """
+        INSERT INTO news_similarity (news_id, similar_news_id, similarity_score) VALUES (%s, %s, %s)
+        ON CONFLICT (news_id, similar_news_id) DO UPDATE SET similarity_score = EXCLUDED.similarity_score;
+        """
+        try:
+            cursor.execute(query, (int(news_id), int(similar_id), float(score)))
+            print(f"✅ Successfully inserted similarity data for news_id: {news_id}!")
+        except Exception as e:
+            print(f"❌ Error inserting similarity data for news_id {news_id}: {e}")
+
+    conn.commit()
+    conn.close()
+    print("✅ News Similarity Computation Completed!")
+
+# # ✅ Fetch Data
+# df = fetch_news_data()
+
+# # ✅ Process Raw Content for Sentiment & Similarity
+# df["cleaned_sentiment_text"] = df["raw_content"].apply(preprocess_for_sentiment)
+# df["cleaned_similarity_text"] = df["raw_content"].apply(preprocess_for_similarity)
+
+# # ✅ Apply Sentiment Analysis
+# df[["sentiment", "sentiment_score"]] = df["cleaned_sentiment_text"].apply(lambda x: pd.Series(analyze_sentiment(x)))
+
+# # ✅ Compute News Similarity
+# news_similarity_results = compute_news_similarity(df)
+
+# # ✅ Store Sentiments in Database
+# conn = psycopg2.connect(DB_URL)
+# cursor = conn.cursor()
+
+# for i, row in df.iterrows():
+#     query = """
+#     INSERT INTO news_sentiments (news_id, sentiment, sentiment_score) VALUES (%s, %s, %s)
+#     ON CONFLICT (news_id) DO UPDATE SET sentiment = EXCLUDED.sentiment, sentiment_score = EXCLUDED.sentiment_score;
+#     """
+#     try:
+#         cursor.execute(query, (row["news_id"], row["sentiment"], row["sentiment_score"]))
+#         print(f"Successfully inserted sentiment data for news_id:{row["news_id"]}!")
+#     except Exception as e:
+#         print(f"Faced an error while inserting sentiment data for news_id - {row["news_id"]} : {e}")
+
+# # ✅ Store Similarity Data in Database
+# for news_id, similar_id, score in news_similarity_results:
+#     query = """
+#     INSERT INTO news_similarity (news_id, similar_news_id, similarity_score) VALUES (%s, %s, %s)
+#     ON CONFLICT (news_id, similar_news_id) DO UPDATE SET similarity_score = EXCLUDED.similarity_score;
+#     """
+#     try:
+#         cursor.execute(query, (news_id, similar_id, score))
+#         print(f"Successfully inserted similarity data for news_id:{news_id}!")
+#     except Exception as e:
+#         print(f"Faced an error while inserting similarity data for news_id - {news_id} : {e}")
+
+# conn.commit()
+# conn.close()
+# print("✅ Sentiment analysis and news similarity stored in the database!")
