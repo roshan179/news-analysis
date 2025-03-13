@@ -92,46 +92,43 @@ This project is a full-fledged data pipeline that:
        +--------------------+
 ```
 
-## *📌 Installation & Setup*
+## _📌 Installation & Setup_
 
-### *1️⃣ Clone the Repository*
+### _1️⃣ Clone the Repository_
 
 git clone https://github.com/your-username/news-analysis.git
 
 cd news-analysis
 
-
-### *2️⃣ Set Up Virtual Environment*
+### _2️⃣ Set Up Virtual Environment_
 
 python -m venv venv
 
-source venv/bin/activate  # On macOS/Linux
+source venv/bin/activate # On macOS/Linux
 
-venv\Scripts\activate     # On Windows
+venv\Scripts\activate # On Windows
 
-
-### *3️⃣ Install Dependencies*
+### _3️⃣ Install Dependencies_
 
 pip install -r requirements.txt
 
-
-### *4️⃣ Configure Database*
+### _4️⃣ Configure Database_
 
 Use YugabyteDB (or PostgreSQL).
 
 Create the required tables using:
 
-
+```txt
 CREATE TABLE news (
 
     news_id SERIAL PRIMARY KEY,
-    
+
 	title TEXT,
-    
+
 	raw_content TEXT,
-    
+
 	url TEXT UNIQUE,
-    
+
 	published_date TIMESTAMP
 
 );
@@ -140,7 +137,7 @@ CREATE TABLE news (
 CREATE TABLE news_summaries (
 
     news_id INT PRIMARY KEY REFERENCES news(news_id),
-    
+
 	summary TEXT
 
 );
@@ -168,16 +165,15 @@ CREATE TABLE news_similarity (
     PRIMARY KEY (news_id, similar_news_id)
 
 );
+```
 
-
-### *5️⃣ Set Database Connection*
+### _5️⃣ Set Database Connection_
 
 Create a .env file and add:
 
 DB_URL="your_postgresql_connection_string_here"
 
 API_KEY="your_news_api_key_here"
-
 
 ## 📌 Running the Pipeline
 
@@ -189,23 +185,19 @@ Automatically fetches, stores, processes & analyzes news data.
 
 Results are stored in the database.
 
-
-
-## *📌 Project Structure*
+## _📌 Project Structure_
 
 📂 news-analysis
- ├── 📄 main.py                   # Main script to run the entire pipeline
- ├── 📄 data_insertion.py          # Fetches and stores news articles
- ├── 📄 news_summarization.py      # Summarizes news articles
- ├── 📄 news_sentiment_similarity.py  # Sentiment & similarity analysis
- ├── 📄 requirements.txt           # Python dependencies
- ├── 📄 README.md                  # Project documentation
- ├── 📂 models                     # (Optional) Stores trained models
- └── 📂 logs                       # (Optional) Stores log files
- 
- 
- 
-## *📌 How It Works (Step-by-Step)*
+├── 📄 main.py # Main script to run the entire pipeline
+├── 📄 data_insertion.py # Fetches and stores news articles
+├── 📄 news_summarization.py # Summarizes news articles
+├── 📄 news_sentiment_similarity.py # Sentiment & similarity analysis
+├── 📄 requirements.txt # Python dependencies
+├── 📄 README.md # Project documentation
+├── 📂 models # (Optional) Stores trained models
+└── 📂 logs # (Optional) Stores log files
+
+## _📌 How It Works (Step-by-Step)_
 
 1️⃣ User inputs date range & number of articles.
 
@@ -219,10 +211,10 @@ Results are stored in the database.
 
 6️⃣ Results are stored in the database.
 
-
 ## 📌 Expected Output
 
 ### **1️⃣ News Summarization Output (Database)**
+
 ```txt
 +----------------------------------------------------------------------------------+
 | news_id | summary                                                                |
@@ -233,6 +225,7 @@ Results are stored in the database.
 ```
 
 ### **2️⃣ Sentiment Analysis Output**
+
 ```txt
 +---------------------------------------+
 | news_id | sentiment | sentiment_score |
@@ -243,6 +236,7 @@ Results are stored in the database.
 ```
 
 ### **3️⃣ News Similarity Output**
+
 ```txt
 +----------------------------------------------+
 | news_id | similar_news_id | similarity_score |
@@ -252,7 +246,7 @@ Results are stored in the database.
 +----------------------------------------------+
 ```
 
-## *📌 Future Enhancements*
+## _📌 Future Enhancements_
 
 ✅ Deploy as a Web App using Flask or FastAPI.
 
@@ -262,8 +256,10 @@ Results are stored in the database.
 
 ✅ Add Political Bias Classification to analyze media bias.
 
-## *📌 Contributors*
+## _📌 Contributors_
+
 💡 Created by Roshan Somayajula
 
-## *📌 License*
+## _📌 License_
+
 📜 MIT License – Free to use, modify, and distribute.
