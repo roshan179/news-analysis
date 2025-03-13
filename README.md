@@ -187,6 +187,7 @@ Results are stored in the database.
 
 ## _📌 Project Structure_
 
+```t
 📂 news-analysis
 ├── 📄 main.py # Main script to run the entire pipeline
 ├── 📄 data_insertion.py # Fetches and stores news articles
@@ -196,6 +197,7 @@ Results are stored in the database.
 ├── 📄 README.md # Project documentation
 ├── 📂 models # (Optional) Stores trained models
 └── 📂 logs # (Optional) Stores log files
+```
 
 ## _📌 How It Works (Step-by-Step)_
 
