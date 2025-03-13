@@ -12,7 +12,14 @@ from web_scraping import *
 from datetime import datetime, timedelta
 from psycopg2.extras import execute_batch# 🟢 Store News Function (Now Using YugabyteDB)
 
-DB_URL = "postgresql://admin:xRZQdDx9_04APJdJc1CftnyqX9VZyX@ap-south-1.d67e1e29-cc8d-4b15-8cf9-4ea1e5bd8b9f.aws.yugabyte.cloud:5433/my_database?ssl=true&sslmode=verify-full&sslrootcert=Usfeul info\\root.crt"
+import os
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
+
+# Fetch values from environment
+DB_URL = os.getenv("DB_URL")
 
 def store_articles(articles):
     try:
@@ -53,23 +60,24 @@ def store_articles(articles):
     else:
         print("No Articles present to be inserted into the database.")
 
-# 🟢 Run the Script
-if __name__ == "__main__":
-    print("---------------Kindly enter below the date range and total number of articles required; code will fetch [NO. OF ARTICLES]/[NO.OF DAYS IN DATERANGE] Articles for each day------------")
-    start_date = input("Enter start date (YYYY-MM-DD) or press Enter for last 7 days: ") or None
-    end_date = input("Enter end date (YYYY-MM-DD) or press Enter for today: ") or None
-    num_articles_input = input("Enter number of articles to fetch or press Enter to accept 70 articles: ")
-    num_articles = int(num_articles_input) if num_articles_input.isdigit() else 70
+# main functionality block commented out as it is being called in the main.py file
+# # 🟢 Run the Script
+# if __name__ == "__main__":
+#     print("---------------Kindly enter below the date range and total number of articles required; code will fetch [NO. OF ARTICLES]/[NO.OF DAYS IN DATERANGE] Articles for each day------------")
+#     start_date = input("Enter start date (YYYY-MM-DD) or press Enter for last 7 days: ") or None
+#     end_date = input("Enter end date (YYYY-MM-DD) or press Enter for today: ") or None
+#     num_articles_input = input("Enter number of articles to fetch or press Enter to accept 70 articles: ")
+#     num_articles = int(num_articles_input) if num_articles_input.isdigit() else 70
 
-        # Generate the fetch plan
-    fetch_plan = generate_fetch_plan(start_date, end_date, num_articles)
+#         # Generate the fetch plan
+#     fetch_plan = generate_fetch_plan(start_date, end_date, num_articles)
 
-    # Fetch articles based on the optimized plan
-    all_articles = []
-    for date, num_articles in fetch_plan.items():
-        all_articles.extend(fetch_news(date, num_articles))
+#     # Fetch articles based on the optimized plan
+#     all_articles = []
+#     for date, num_articles in fetch_plan.items():
+#         all_articles.extend(fetch_news(date, num_articles))
 
-    print(f"🎯 Total articles fetched: {len(all_articles)}")
+#     print(f"🎯 Total articles fetched: {len(all_articles)}")
 
-    # articles = fetch_news(start_date, end_date, num_articles)
-    store_articles(all_articles)
+#     # articles = fetch_news(start_date, end_date, num_articles)
+#     store_articles(all_articles)
