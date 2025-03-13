@@ -10,6 +10,16 @@ from datetime import datetime, timedelta
 from psycopg2.extras import execute_batch
 from collections import defaultdict
 from datetime import datetime, timedelta
+import os
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
+
+# Fetch values from environment
+DB_URL = os.getenv("DB_URL")
+API_KEY = os.getenv("API_KEY")
+
 
 def clean_text(text):
     #clean text without webscraped tags
@@ -36,7 +46,7 @@ def processing_ready_text(text):
 
 # URL = f"https://content.guardianapis.com/search?api-key={API_KEY}&show-fields=body"
 
-API_KEY = "845a8aa3-afd9-448d-9c4a-c01383a9352c" #API KEY for The Guardian
+# API_KEY =  #API KEY for The Guardian
 BASE_URL = "https://content.guardianapis.com/search"
 PAGE_SIZE = 50  # Maximum allowed per API request
 
