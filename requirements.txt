@@ -1,0 +1,26 @@
+# Core Dependencies
+requests==2.31.0
+psycopg2-binary==2.9.9
+python-dotenv==1.0.1
+
+# NLP & Text Processing
+nltk==3.8.1
+beautifulsoup4==4.12.3
+html5lib==1.1
+lxml==5.1.0
+
+# Machine Learning & Text Vectorization
+scikit-learn==1.4.2
+numpy==1.26.4
+pandas==2.2.1
+
+# Sentiment Analysis (VADER)
+vaderSentiment==3.3.2
+
+# Topic Modeling & Similarity
+wordcloud==1.9.3
+matplotlib==3.8.3
+seaborn==0.13.2
+
+# Misc
+tqdm==4.66.2
