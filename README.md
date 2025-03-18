@@ -190,7 +190,8 @@ Results are stored in the database.
 ```t
 📂 news-analysis
 ├── 📄 main.py # Main script to run the entire pipeline
-├── 📄 data_insertion.py # Fetches and stores news articles
+├── 📄 web_scraping.py # Fetches the news article from The Guradian - via API calls
+├── 📄 data_insertion.py # Stores the fetched news articles
 ├── 📄 news_summarization.py # Summarizes news articles
 ├── 📄 news_sentiment_similarity.py # Sentiment & similarity analysis
 ├── 📄 requirements.txt # Python dependencies
