@@ -13,10 +13,10 @@ def reset_sequences():
     cursor = conn.cursor()
 
     queries = [
-        "SELECT setval('news_id_seq', COALESCE((SELECT MAX(news_id) FROM news), 1), true);",
-        "SELECT setval('news_summaries_id_seq', COALESCE((SELECT MAX(id) FROM news_summaries), 1), true);",
-        "SELECT setval('news_sentiments_id_seq', COALESCE((SELECT MAX(id) FROM news_sentiments), 1), true);",
-        "SELECT setval('news_similarity_id_seq', COALESCE((SELECT MAX(id) FROM news_similarity), 1), true);"
+        "SELECT setval('news_id_seq', COALESCE((SELECT MAX(news_id) FROM news), 0), TRUE);",
+        "SELECT setval('news_summaries_id_seq', COALESCE((SELECT MAX(id) FROM news_summaries), 0), TRUE);",
+        "SELECT setval('news_sentiments_id_seq', COALESCE((SELECT MAX(id) FROM news_sentiments), 0), TRUE);"
+        # "SELECT setval('news_similarity_id_seq', COALESCE((SELECT MAX(id) FROM news_similarity), 0), true);"
     ]
 
     try:

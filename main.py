@@ -1,7 +1,8 @@
 import time
 from data_insertion import fetch_news, store_articles, generate_fetch_plan
 from news_summarization import summarize_news
-from news_sentiment_similarity import perform_sentiment_analysis, perform_news_similarity
+from news_sentiment import perform_sentiment_analysis
+from news_similarity import perform_news_similarity
 from reset_sequence import reset_sequences
 
 #Resetting Sequences and readying database for incremental load
