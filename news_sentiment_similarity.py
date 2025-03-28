@@ -24,12 +24,21 @@ load_dotenv()
 DB_URL = os.getenv("DB_URL")
 # API_KEY = os.getenv("API_KEY")
 
+sent_pro_id = [] #list of IDs successfully processed for sentiment analsyis, to be updated at last
+sim_pro_id = [] #list of IDs successfully processed for similarity analsyis, to be updated at last
 
-
-def fetch_news_data():
-    """Fetch raw news content from the database."""
+def fetch_sentiment_news_data():
+    """Fetch raw news content from the database for sentiment analysis."""
     conn = psycopg2.connect(DB_URL)
-    query = "SELECT news_id, raw_content FROM news order by news_id;"  
+    query = "SELECT news_id, raw_content FROM news where sentiment_flag=FALSE order by news_id;"  
+    df = pd.read_sql(query, conn)
+    conn.close()
+    return df
+
+def fetch_similarity_news_data():
+    """Fetch raw news content from the database for similarity analysis."""
+    conn = psycopg2.connect(DB_URL)
+    query = "SELECT news_id, raw_content FROM news where similarity_flag=FALSE order by news_id;"  
     df = pd.read_sql(query, conn)
     conn.close()
     return df
@@ -91,7 +100,7 @@ def perform_sentiment_analysis():
     print("\n🚀 Performing Sentiment Analysis...")
     
     # ✅ Fetch Data
-    df = fetch_news_data()
+    df = fetch_sentiment_news_data()
     
     # ✅ Process Raw Content for Sentiment
     df["cleaned_sentiment_text"] = df["raw_content"].apply(preprocess_for_sentiment)
@@ -110,9 +119,20 @@ def perform_sentiment_analysis():
         """
         try:
             cursor.execute(query, (row["news_id"], row["sentiment"], row["sentiment_score"]))
+            sent_pro_id.append(row["news_id"])
             print(f"✅ Successfully inserted sentiment data for news_id: {row['news_id']}!")
         except Exception as e:
             print(f"❌ Error inserting sentiment data for news_id {row['news_id']}: {e}")
+
+    # ✅ Update processed flag for successful records - sentiment analysis
+    if sent_pro_id:
+        update_query = f"""
+        UPDATE news 
+        SET sentiment_flag = TRUE 
+        WHERE news_id IN ({','.join(map(str, sent_pro_id))});
+        """
+        cursor.execute(update_query)
+        print(f"✅ Updated sentiment_flag for {len(sent_pro_id)} records.")
 
     conn.commit()
     conn.close()
@@ -123,7 +143,7 @@ def perform_news_similarity():
     print("\n🚀 Computing News Similarity...")
 
     # ✅ Fetch Data
-    df = fetch_news_data()
+    df = fetch_similarity_news_data()
 
     # ✅ Process Raw Content for Similarity
     df["cleaned_similarity_text"] = df["raw_content"].apply(preprocess_for_similarity)
@@ -142,9 +162,20 @@ def perform_news_similarity():
         """
         try:
             cursor.execute(query, (int(news_id), int(similar_id), float(score)))
+            sim_pro_id.append(news_id)
             print(f"✅ Successfully inserted similarity data for news_id: {news_id}!")
         except Exception as e:
             print(f"❌ Error inserting similarity data for news_id {news_id}: {e}")
+
+    # ✅ Update processed flag for successful records - similarity analysis
+    if sim_pro_id:
+        update_query = f"""
+        UPDATE news 
+        SET similarity_flag = TRUE 
+        WHERE news_id IN ({','.join(map(str, sim_pro_id))});
+        """
+        cursor.execute(update_query)
+        print(f"✅ Updated similarity flag for {len(sim_pro_id)} records.")
 
     conn.commit()
     conn.close()
