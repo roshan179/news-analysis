@@ -11,7 +11,7 @@ lxml>=5.0.0
 
 # Machine Learning & Text Vectorization
 scikit-learn>=1.4.0
-numpy>=1.25, <1.27
+numpy>=1.25 --only-binary=numpy
 pandas>=2.2.0
 
 # Sentiment Analysis (VADER)
