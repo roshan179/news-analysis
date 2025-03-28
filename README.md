@@ -64,32 +64,65 @@ This project is a full-fledged data pipeline that:
 
 - Logs success & error messages at each step.
 
+### 📌 Updated Flag Functionality
+
+The pipeline utilizes flag columns (`summarization_flag`, `sentiment_flag`, `similarity_flag`) in the `news` table to ensure a structured and efficient incremental processing workflow:
+
+- **summarization_flag**: Ensures summarization is performed only once per article.
+- **sentiment_flag**: Prevents redundant sentiment analysis on already processed news.
+- **similarity_flag**: Avoids unnecessary reprocessing for similarity detection.
+
+These flags help identify new or unprocessed records, ensuring that the pipeline only operates on necessary data, improving efficiency and reducing redundant computations.
+
+### 📌 Reset Sequence Functionality
+
+The `reset_sequence.py` script is used to maintain sequence integrity for primary keys in the database. It ensures that:
+
+1. The sequence values are updated correctly even after manual truncation - TRUNCATE TABLE RESTART IDENTITY.
+2. The incremental load continues smoothly without key conflicts.
+
+The script runs the following query format for each table:
+
+```sql
+SELECT setval('sequence_name', COALESCE((SELECT MAX(column_name) FROM table_name), 0), TRUE);
+```
+
+Sequence Reset Logic: The setval function uses
+
+```sql
+COALESCE((SELECT MAX(id) FROM table), 0), TRUE
+```
+
+to ensure continuity in incremental loads. This prevents primary key conflicts by setting the sequence to the highest
+
+existing value and correctly handling cases where the table is manually truncated.
+
 ---
 
 ## 📌 Project Architecture
 
 ```txt
-       +--------------------+
-       |   Fetch News       |
-       +--------------------+
-                ||
-                vv
-       +--------------------+
-       | Store in Database  |
-       +--------------------+
-           /     |     \
-          /      |      \
-         v       v       v
-+----------------+  +----------------+  +----------------+
+            +----------------------+
+            |     Fetch News       |
+            +----------------------+
+                        ||
+                        vv
+       +------------------------------------+
+       |        Store in Database           |
+       +------------------------------------+
+           /             |               \
+          /              |                \
+         v               v                 v
++----------------+  +-----------------+  +----------------+
 | Summarization  |  | Sentiment       |  | Similarity     |
 | (TF-IDF & LDA) |  | Analysis (VADER)|  | Detection      |
-+----------------+  +----------------+  +----------------+
-         \       |       /
-          \      |      /
-           v     v     v
-       +--------------------+
-       |  Store in Database |
-       +--------------------+
++----------------+  +-----------------+  +----------------+
+         \                  |                /
+          \                 |               /
+           v                v              v
+          +----------------------------------+
+          |     Store in Database            |
+          +----------------------------------+
 ```
 
 ## _📌 Installation & Setup_
@@ -129,14 +162,22 @@ CREATE TABLE news (
 
 	url TEXT UNIQUE,
 
-	published_date TIMESTAMP
+	published_date TIMESTAMP,
+
+    summarization_flag BOOLEAN DEFAULT FALSE,
+
+    sentiment_flag BOOLEAN DEFAULT FALSE,
+
+    similarity_flag BOOLEAN DEFAULT FALSE
 
 );
 
 
 CREATE TABLE news_summaries (
 
-    news_id INT PRIMARY KEY REFERENCES news(news_id),
+    id SERIAL PRIMARY KEY,
+
+    news_id INT REFERENCES news(news_id),
 
 	summary TEXT
 
@@ -145,7 +186,9 @@ CREATE TABLE news_summaries (
 
 CREATE TABLE news_sentiments (
 
-    news_id INT PRIMARY KEY REFERENCES news(news_id),
+    id SERIAL PRIMARY KEY,
+
+    news_id INT REFERENCES news(news_id),
 
     sentiment TEXT,
 
@@ -156,15 +199,15 @@ CREATE TABLE news_sentiments (
 
 CREATE TABLE news_similarity (
 
-    news_id INT,
+    news_id INT REFERENCES news(news_id),
 
-    similar_news_id INT,
+    similar_news_id INT REFERENCES news(news_id),
 
-    similarity_score FLOAT,
+    similarity_score REAL NOT NULL,
 
     PRIMARY KEY (news_id, similar_news_id)
-
 );
+;
 ```
 
 ### _5️⃣ Set Database Connection_
@@ -193,7 +236,9 @@ Results are stored in the database.
 ├── 📄 web_scraping.py # Fetches the news article from The Guradian - via API calls
 ├── 📄 data_insertion.py # Stores the fetched news articles
 ├── 📄 news_summarization.py # Summarizes news articles
-├── 📄 news_sentiment_similarity.py # Sentiment & similarity analysis
+├── 📄 news_sentiment.py # Sentiment analysis
+├── 📄 news_similarity.py # similarity analysis
+├── 📄 reset_sequence.py # Reset the sequence of keys before every run to ensure continuity
 ├── 📄 requirements.txt # Python dependencies
 ├── 📄 README.md # Project documentation
 ├── 📂 models # (Optional) Stores trained models

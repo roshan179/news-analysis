@@ -1,7 +1,13 @@
 import time
 from data_insertion import fetch_news, store_articles, generate_fetch_plan
 from news_summarization import summarize_news
-from news_sentiment_similarity import perform_sentiment_analysis, perform_news_similarity
+from news_sentiment import perform_sentiment_analysis
+from news_similarity import perform_news_similarity
+from reset_sequence import reset_sequences
+
+#Resetting Sequences and readying database for incremental load
+reset_sequences()
+
 
 def log_message(step):
     print("\n" + "=" * 50)
@@ -17,8 +23,8 @@ try:
     print("---------------Kindly enter below the date range and total number of articles required;")
     print("Code will fetch [NO. OF ARTICLES]/[NO.OF DAYS IN DATERANGE] Articles for each day------------")
 
-    start_date = input("Enter start date (YYYY-MM-DD) or press Enter for last 7 days: ") or None
-    end_date = input("Enter end date (YYYY-MM-DD) or press Enter for today: ") or None
+    start_date = input("Enter start date (YYYY-MM-DD) or press Enter for 7 days ago: ") or None
+    end_date = input("Enter end date (YYYY-MM-DD) or press Enter for yesterday: ") or None
     num_articles_input = input("Enter number of articles to fetch or press Enter to accept 70 articles: ")
     num_articles = int(num_articles_input) if num_articles_input.isdigit() else 70
 
